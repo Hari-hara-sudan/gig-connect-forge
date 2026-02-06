@@ -3,8 +3,31 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Services from "./pages/Services";
+import ServiceDetails from "./pages/ServiceDetails";
+import Login from "./pages/Login";
+import SelectRole from "./pages/SelectRole";
+
+import CustomerDashboard from "./pages/customer/Dashboard";
+import CustomerBookings from "./pages/customer/Bookings";
+import CustomerProfile from "./pages/customer/Profile";
+import CustomerNotifications from "./pages/customer/Notifications";
+
+import VendorDashboard from "./pages/vendor/Dashboard";
+import VendorServices from "./pages/vendor/Services";
+import VendorBookings from "./pages/vendor/Bookings";
+import VendorEarnings from "./pages/vendor/Earnings";
+import VendorProfile from "./pages/vendor/Profile";
+import VendorNotifications from "./pages/vendor/Notifications";
+
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminVendors from "./pages/admin/Vendors";
+import AdminCategories from "./pages/admin/Categories";
+import AdminUsers from "./pages/admin/Users";
+import AdminNotifications from "./pages/admin/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -16,7 +39,29 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/services" element={<Services />} />
+          <Route path="/service/:id" element={<ServiceDetails />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/select-role" element={<SelectRole />} />
+
+          <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+          <Route path="/customer/bookings" element={<CustomerBookings />} />
+          <Route path="/customer/profile" element={<CustomerProfile />} />
+          <Route path="/customer/notifications" element={<CustomerNotifications />} />
+
+          <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+          <Route path="/vendor/services" element={<VendorServices />} />
+          <Route path="/vendor/bookings" element={<VendorBookings />} />
+          <Route path="/vendor/earnings" element={<VendorEarnings />} />
+          <Route path="/vendor/profile" element={<VendorProfile />} />
+          <Route path="/vendor/notifications" element={<VendorNotifications />} />
+
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/vendors" element={<AdminVendors />} />
+          <Route path="/admin/categories" element={<AdminCategories />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/notifications" element={<AdminNotifications />} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
