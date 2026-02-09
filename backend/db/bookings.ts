@@ -55,14 +55,13 @@ export async function getAvailableSlots(params: {
     where.push(`services.id = $${values.length}`);
   }
 
+  // Always filter by date - show only current and future slots
   if (params.fromDate) {
     values.push(params.fromDate);
     where.push(`slots.slot_date >= $${values.length}::date`);
-  } else if (!params.includeBooked) {
-    // Only filter by current date for customers/public view
+  } else {
     where.push(`slots.slot_date >= CURRENT_DATE`);
   }
-  // For vendors viewing their own slots, don't filter by date
 
   const sql = `
     SELECT DISTINCT
