@@ -195,8 +195,9 @@ async function start() {
       
       // If registering as vendor, always create vendor profile (even if empty)
       if (role === "vendor") {
+        console.log("[POST /auth/register] Creating vendor profile with data:", vendorProfile);
         try {
-          await upsertVendorProfile({
+          const createdVendorProfile = await upsertVendorProfile({
             userId: user.id,
             businessName: vendorProfile?.businessName,
             serviceArea: vendorProfile?.serviceArea,
@@ -206,6 +207,7 @@ async function start() {
             phoneNumber: vendorProfile?.phoneNumber,
             description: vendorProfile?.description,
           });
+          console.log("[POST /auth/register] Vendor profile created:", createdVendorProfile);
         } catch (vendorErr: any) {
           // Log error but don't fail registration - they can update profile later
           console.warn("Vendor profile creation failed:", vendorErr.message);
@@ -275,7 +277,9 @@ async function start() {
         const token = signAuthToken(dbUser);
         setAuthCookie(res, token);
 
-        const redirectPath = role === "vendor" ? "/vendor/dashboard" : "/customer/services";
+        // For vendors, redirect to profile page to complete setup
+        // For customers, redirect to services
+        const redirectPath = role === "vendor" ? "/vendor/profile?setup=true" : "/customer/services";
         res.redirect(`${frontendUrl}${redirectPath}`);
       } catch {
         res.redirect(`${frontendUrl}/login?oauth=failed`);
@@ -302,6 +306,7 @@ async function start() {
 
     try {
       const profile = await getUserProfile(user.id);
+      console.log("[GET /auth/profile] User ID:", user.id, "Vendor profile:", profile.vendor);
       res.status(200).json({ ok: true, profile });
     } catch (err: any) {
       res.status(400).json({ error: err?.message ?? "Failed to fetch profile" });
