@@ -20,12 +20,14 @@ import CustomerDashboard from "./pages/customer/Dashboard";
 import CustomerServices from "./pages/customer/Services";
 import CustomerServiceDetails from "./pages/customer/ServiceDetails";
 import CustomerBookings from "./pages/customer/Bookings";
+import CustomerBookingCheckout from "./pages/customer/BookingCheckout";
 import CustomerProfile from "./pages/customer/Profile";
 import CustomerNotifications from "./pages/customer/Notifications";
 
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorServices from "./pages/vendor/Services";
 import VendorBookings from "./pages/vendor/Bookings";
+import VendorReviews from "./pages/vendor/Reviews";
 import VendorEarnings from "./pages/vendor/Earnings";
 import VendorProfile from "./pages/vendor/Profile";
 import VendorNotifications from "./pages/vendor/Notifications";
@@ -35,6 +37,7 @@ import AdminVendors from "./pages/admin/Vendors";
 import AdminCategories from "./pages/admin/Categories";
 import AdminUsers from "./pages/admin/Users";
 import AdminNotifications from "./pages/admin/Notifications";
+import AdminReviews from "./pages/admin/Reviews";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +60,7 @@ const App = () => (
                 <Route path="/customer/dashboard" element={<CustomerDashboard />} />
                 <Route path="/customer/services" element={<CustomerServices />} />
                 <Route path="/customer/service/:id" element={<CustomerServiceDetails />} />
+                <Route path="/customer/checkout" element={<CustomerBookingCheckout />} />
                 <Route path="/customer/bookings" element={<CustomerBookings />} />
                 <Route path="/customer/profile" element={<CustomerProfile />} />
                 <Route path="/customer/notifications" element={<CustomerNotifications />} />
@@ -66,6 +70,7 @@ const App = () => (
                 <Route path="/vendor/dashboard" element={<VendorDashboard />} />
                 <Route path="/vendor/services" element={<VendorServices />} />
                 <Route path="/vendor/bookings" element={<VendorBookings />} />
+                <Route path="/vendor/reviews" element={<VendorReviews />} />
                 <Route path="/vendor/earnings" element={<VendorEarnings />} />
                 <Route path="/vendor/profile" element={<VendorProfile />} />
                 <Route path="/vendor/notifications" element={<VendorNotifications />} />
@@ -76,6 +81,7 @@ const App = () => (
                 <Route path="/admin/vendors" element={<AdminVendors />} />
                 <Route path="/admin/categories" element={<AdminCategories />} />
                 <Route path="/admin/users" element={<AdminUsers />} />
+                <Route path="/admin/reviews" element={<AdminReviews />} />
                 <Route path="/admin/notifications" element={<AdminNotifications />} />
               </Route>
 

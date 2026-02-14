@@ -50,7 +50,7 @@ export async function getVendorStats(vendorId: number): Promise<VendorStats> {
     JOIN services s ON b.service_id = s.id
     WHERE s.vendor_id = $1
       AND b.status IN ('accepted', 'completed')
-      AND DATE_TRUNC('month', b.created_at) = DATE_TRUNC('month', CURRENT_DATE)
+      AND DATE_TRUNC('month', b.booking_date) = DATE_TRUNC('month', CURRENT_DATE)
     `,
     [vendorId]
   );
@@ -65,7 +65,7 @@ export async function getVendorStats(vendorId: number): Promise<VendorStats> {
     JOIN services s ON b.service_id = s.id
     WHERE s.vendor_id = $1
       AND b.status IN ('accepted', 'completed')
-      AND DATE_TRUNC('month', b.created_at) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+      AND DATE_TRUNC('month', b.booking_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
     `,
     [vendorId]
   );
@@ -80,7 +80,7 @@ export async function getVendorStats(vendorId: number): Promise<VendorStats> {
     FROM bookings b
     JOIN services s ON b.service_id = s.id
     WHERE s.vendor_id = $1
-      AND DATE_TRUNC('month', b.created_at) = DATE_TRUNC('month', CURRENT_DATE)
+      AND DATE_TRUNC('month', b.booking_date) = DATE_TRUNC('month', CURRENT_DATE)
     `,
     [vendorId]
   );
@@ -94,7 +94,7 @@ export async function getVendorStats(vendorId: number): Promise<VendorStats> {
     FROM bookings b
     JOIN services s ON b.service_id = s.id
     WHERE s.vendor_id = $1
-      AND DATE_TRUNC('month', b.created_at) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+      AND DATE_TRUNC('month', b.booking_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
     `,
     [vendorId]
   );
@@ -121,15 +121,15 @@ export async function getVendorMonthlyEarnings(vendorId: number, months: number 
   const result = await pool.query<{ month: string; earnings: string }>(
     `
     SELECT 
-      TO_CHAR(DATE_TRUNC('month', b.created_at), 'Mon') AS month,
+      TO_CHAR(DATE_TRUNC('month', b.booking_date), 'Mon') AS month,
       COALESCE(SUM(s.price), 0) AS earnings
     FROM bookings b
     JOIN services s ON b.service_id = s.id
     WHERE s.vendor_id = $1
       AND b.status IN ('accepted', 'completed')
-      AND b.created_at >= CURRENT_DATE - INTERVAL '1 month' * $2
-    GROUP BY DATE_TRUNC('month', b.created_at)
-    ORDER BY DATE_TRUNC('month', b.created_at) ASC
+      AND b.booking_date >= CURRENT_DATE - INTERVAL '1 month' * $2
+    GROUP BY DATE_TRUNC('month', b.booking_date)
+    ORDER BY DATE_TRUNC('month', b.booking_date) ASC
     `,
     [vendorId, months]
   );
@@ -258,7 +258,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     `
     SELECT COUNT(*) AS this_month_bookings 
     FROM bookings 
-    WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
+    WHERE DATE_TRUNC('month', booking_date) = DATE_TRUNC('month', CURRENT_DATE)
     `
   );
   const thisMonthBookings = Number(thisMonthBookingsResult.rows[0]?.this_month_bookings || 0);
@@ -267,7 +267,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     `
     SELECT COUNT(*) AS last_month_bookings 
     FROM bookings 
-    WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+    WHERE DATE_TRUNC('month', booking_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
     `
   );
   const lastMonthBookings = Number(lastMonthBookingsResult.rows[0]?.last_month_bookings || 0);
@@ -280,7 +280,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     FROM bookings b
     JOIN services s ON b.service_id = s.id
     WHERE b.status IN ('accepted', 'completed')
-      AND DATE_TRUNC('month', b.created_at) = DATE_TRUNC('month', CURRENT_DATE)
+      AND DATE_TRUNC('month', b.booking_date) = DATE_TRUNC('month', CURRENT_DATE)
     `
   );
   const thisMonthRevenue = Number(thisMonthRevenueResult.rows[0]?.this_month_revenue || 0);
@@ -291,7 +291,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     FROM bookings b
     JOIN services s ON b.service_id = s.id
     WHERE b.status IN ('accepted', 'completed')
-      AND DATE_TRUNC('month', b.created_at) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+      AND DATE_TRUNC('month', b.booking_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
     `
   );
   const lastMonthRevenue = Number(lastMonthRevenueResult.rows[0]?.last_month_revenue || 0);
@@ -339,12 +339,12 @@ export async function getAdminBookingsTrend(months: number = 6): Promise<Monthly
   const result = await pool.query<{ month: string; bookings: string }>(
     `
     SELECT 
-      TO_CHAR(DATE_TRUNC('month', created_at), 'Mon') AS month,
+      TO_CHAR(DATE_TRUNC('month', booking_date), 'Mon') AS month,
       COUNT(*) AS bookings
     FROM bookings
-    WHERE created_at >= CURRENT_DATE - INTERVAL '1 month' * $1
-    GROUP BY DATE_TRUNC('month', created_at)
-    ORDER BY DATE_TRUNC('month', created_at) ASC
+    WHERE booking_date >= CURRENT_DATE - INTERVAL '1 month' * $1
+    GROUP BY DATE_TRUNC('month', booking_date)
+    ORDER BY DATE_TRUNC('month', booking_date) ASC
     `,
     [months]
   );
@@ -420,7 +420,7 @@ export async function getCustomerStats(customerId: number): Promise<CustomerStat
     SELECT COUNT(*) AS this_month_bookings
     FROM bookings
     WHERE customer_id = $1
-      AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
+      AND DATE_TRUNC('month', booking_date) = DATE_TRUNC('month', CURRENT_DATE)
     `,
     [customerId]
   );
@@ -432,7 +432,7 @@ export async function getCustomerStats(customerId: number): Promise<CustomerStat
     SELECT COUNT(*) AS last_month_bookings
     FROM bookings
     WHERE customer_id = $1
-      AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+      AND DATE_TRUNC('month', booking_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
     `,
     [customerId]
   );
@@ -447,7 +447,7 @@ export async function getCustomerStats(customerId: number): Promise<CustomerStat
     JOIN services s ON b.service_id = s.id
     WHERE b.customer_id = $1
       AND b.status IN ('accepted', 'completed')
-      AND DATE_TRUNC('month', b.created_at) = DATE_TRUNC('month', CURRENT_DATE)
+      AND DATE_TRUNC('month', b.booking_date) = DATE_TRUNC('month', CURRENT_DATE)
     `,
     [customerId]
   );
@@ -461,7 +461,7 @@ export async function getCustomerStats(customerId: number): Promise<CustomerStat
     JOIN services s ON b.service_id = s.id
     WHERE b.customer_id = $1
       AND b.status IN ('accepted', 'completed')
-      AND DATE_TRUNC('month', b.created_at) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
+      AND DATE_TRUNC('month', b.booking_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
     `,
     [customerId]
   );

@@ -28,10 +28,10 @@ type RatingDistribution = {
 
 type RecentBooking = {
   id: number;
-  customer_email: string;
-  service_title: string;
-  slot_date: string;
-  slot_start_time: string;
+  customerEmail: string;
+  serviceTitle: string;
+  slotDate: string;
+  startTime: string;
   status: string;
 };
 
@@ -113,7 +113,7 @@ export default function VendorDashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             label="Total Earnings"
-            value={`$${stats?.totalEarnings.toLocaleString() || 0}`}
+            value={`₹${stats?.totalEarnings.toLocaleString() || 0}`}
             icon={DollarSign}
             trend={formatTrend(stats?.earningsTrend || 0)}
             trendUp={(stats?.earningsTrend || 0) >= 0}
@@ -128,7 +128,7 @@ export default function VendorDashboard() {
           <StatCard label="Avg Rating" value={stats?.avgRating.toFixed(1) || "0.0"} icon={Star} />
           <StatCard
             label="This Month"
-            value={`$${stats?.thisMonthEarnings.toLocaleString() || 0}`}
+            value={`₹${stats?.thisMonthEarnings.toLocaleString() || 0}`}
             icon={TrendingUp}
             trend={formatTrend(stats?.earningsTrend || 0)}
             trendUp={(stats?.earningsTrend || 0) >= 0}
@@ -203,10 +203,10 @@ export default function VendorDashboard() {
                 >
                   <div>
                     <p className="font-medium text-sm text-foreground">
-                      {b.customer_email} — {b.service_title}
+                      {b.customerEmail} — {b.serviceTitle}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {formatDate(b.slot_date)} at {b.slot_start_time}
+                      {formatDate(b.slotDate)} at {b.startTime}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

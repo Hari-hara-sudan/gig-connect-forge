@@ -3,7 +3,7 @@ import DashboardLayout from "@/components/layouts/DashboardLayout";
 
 const notifications = [
   { text: "New vendor application from Glamour Salon requires review", time: "30 min ago", unread: true },
-  { text: "Monthly revenue report generated — $128K total", time: "2 hours ago", unread: true },
+  { text: "Monthly revenue report generated — ₹128K total", time: "2 hours ago", unread: true },
   { text: "User Emily L. flagged a review for moderation", time: "1 day ago", unread: false },
   { text: "System update completed successfully", time: "2 days ago", unread: false },
 ];

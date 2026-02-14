@@ -2,10 +2,12 @@ import { useQuery } from "@apollo/client";
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Clock, MapPin, Star, User } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { GET_SERVICE_BY_ID } from "@/graphql/serviceQueries";
+import { useAuth } from "@/auth/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 type AvailabilitySlot = {
   id: number;
@@ -18,6 +20,9 @@ type AvailabilitySlot = {
 
 export default function CustomerServiceDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [availableSlots, setAvailableSlots] = useState<AvailabilitySlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -77,6 +82,40 @@ export default function CustomerServiceDetails() {
   const selectedSlotDetails = selectedSlot
     ? availableSlots.find((s) => s.id === selectedSlot)
     : null;
+
+  const handleBookNow = () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to book this service.",
+        variant: "destructive",
+      });
+      navigate("/login");
+      return;
+    }
+
+    if (!selectedSlot || !selectedSlotDetails) {
+      toast({
+        title: "No Slot Selected",
+        description: "Please select a time slot first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Navigate to checkout with booking details
+    const params = new URLSearchParams({
+      serviceId,
+      slotId: String(selectedSlot),
+      serviceTitle: service?.title || '',
+      vendorName: service?.vendor.displayName || '',
+      price: String(service?.price || 0),
+      slotDate: selectedSlotDetails.slotDate,
+      slotTime: formatTime(selectedSlotDetails.startTime),
+    });
+
+    navigate(`/customer/checkout?${params.toString()}`);
+  };
 
   return (
     <DashboardLayout role="customer">
@@ -190,7 +229,11 @@ export default function CustomerServiceDetails() {
                     </div>
                   )}
                 </div>
-                <button className="w-full py-3 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25">
+                <button 
+                  onClick={handleBookNow}
+                  disabled={!selectedSlot}
+                  className="w-full py-3 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Book Now
                 </button>
               </motion.div>

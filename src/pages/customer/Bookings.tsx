@@ -2,7 +2,8 @@ import { motion } from "framer-motion";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { XCircle, Calendar } from "lucide-react";
+import { XCircle, Calendar, FileText, Star } from "lucide-react";
+import ReviewDialog from "@/components/ReviewDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,20 +17,20 @@ import {
 
 type Booking = {
   id: number;
-  customer_id: number;
-  vendor_id: number;
-  service_id: number;
-  slot_id: number;
+  customerId: number;
+  vendorId: number;
+  serviceId: number;
+  slotId: number;
   status: string;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-  service_title: string;
-  service_price: number;
-  vendor_display_name: string;
-  slot_date: string;
-  slot_start_time: string;
-  slot_end_time: string;
+  bookingDate: string | null;
+  serviceTitle: string;
+  servicePrice: number;
+  vendorName: string;
+  slotDate: string;
+  startTime: string;
+  endTime: string;
+  paymentStatus?: string;
+  paymentAmount?: number;
 };
 
 const statusColors: Record<string, string> = {
@@ -47,6 +48,10 @@ export default function CustomerBookings() {
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  
+  // Review dialog state
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -118,19 +123,79 @@ export default function CustomerBookings() {
   };
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    if (!dateStr) return "Invalid Date";
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return "Invalid Date";
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    } catch {
+      return "Invalid Date";
+    }
   };
 
   const canCancel = (booking: Booking) => {
     return booking.status !== "cancelled" && booking.status !== "completed";
   };
 
+  const canReview = (booking: Booking) => {
+    return booking.status === "completed";
+  };
+
+  const handleOpenReviewDialog = (booking: Booking) => {
+    setReviewBooking(booking);
+    setReviewDialogOpen(true);
+  };
+
+  const handleReviewSubmitted = () => {
+    fetchBookings(); // Refresh bookings list
+  };
+
+  const handleDownloadInvoice = async (bookingId: number) => {
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}/invoice`, {
+        credentials: "include",
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        // Create a JSON file and trigger download
+        const invoiceData = JSON.stringify(result.invoice, null, 2);
+        const blob = new Blob([invoiceData], { type: "application/json" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${result.invoice.invoiceNumber}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: "Invoice Downloaded",
+          description: "Your invoice has been downloaded successfully.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to download invoice.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "An error occurred while downloading the invoice.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <DashboardLayout role="customer">
       <div className="space-y-6">
         <div className="flex items-center gap-2">
-          {["all", "pending", "accepted", "completed", "cancelled"].map((f) => (
+          {["all", "pending", "accepted", "rejected", "completed", "cancelled"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -174,30 +239,50 @@ export default function CustomerBookings() {
                     className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                   >
                     <td className="px-5 py-3 text-foreground font-mono text-xs">#{b.id}</td>
-                    <td className="px-5 py-3 text-foreground">{b.service_title}</td>
-                    <td className="px-5 py-3 text-muted-foreground hidden md:table-cell">{b.vendor_display_name}</td>
+                    <td className="px-5 py-3 text-foreground">{b.serviceTitle}</td>
+                    <td className="px-5 py-3 text-muted-foreground hidden md:table-cell">{b.vendorName}</td>
                     <td className="px-5 py-3 text-muted-foreground hidden sm:table-cell">
-                      {formatDate(b.slot_date)} {b.slot_start_time}
+                      {b.slotDate ? `${formatDate(b.slotDate)} ${b.startTime || ''}` : 'No date set'}
                     </td>
-                    <td className="px-5 py-3 text-foreground font-medium">${b.service_price}</td>
+                    <td className="px-5 py-3 text-foreground font-medium">₹{b.servicePrice}</td>
                     <td className="px-5 py-3">
                       <span className={`text-xs px-2 py-0.5 rounded-full border ${statusColors[b.status] || "bg-gray-500/10 text-gray-400 border-gray-500/20"}`}>
                         {b.status}
                       </span>
                     </td>
                     <td className="px-5 py-3">
-                      {canCancel(b) && (
-                        <button
-                          onClick={() => {
-                            setCancellingId(b.id);
-                            setShowCancelDialog(true);
-                          }}
-                          className="text-red-400 hover:text-red-300 transition-colors"
-                          title="Cancel booking"
-                        >
-                          <XCircle size={18} />
-                        </button>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {canReview(b) && (
+                          <button
+                            onClick={() => handleOpenReviewDialog(b)}
+                            className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                            title="Rate service"
+                          >
+                            <Star size={18} />
+                          </button>
+                        )}
+                        {canCancel(b) && (
+                          <button
+                            onClick={() => {
+                              setCancellingId(b.id);
+                              setShowCancelDialog(true);
+                            }}
+                            className="text-red-400 hover:text-red-300 transition-colors"
+                            title="Cancel booking"
+                          >
+                            <XCircle size={18} />
+                          </button>
+                        )}
+                        {b.paymentStatus === "success" && (
+                          <button
+                            onClick={() => handleDownloadInvoice(b.id)}
+                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                            title="Download invoice"
+                          >
+                            <FileText size={18} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </motion.tr>
                 ))}
@@ -222,6 +307,22 @@ export default function CustomerBookings() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Review Dialog */}
+        {reviewBooking && (
+          <ReviewDialog
+            isOpen={reviewDialogOpen}
+            onClose={() => {
+              setReviewDialogOpen(false);
+              setReviewBooking(null);
+            }}
+            bookingId={reviewBooking.id}
+            serviceId={reviewBooking.serviceId}
+            serviceTitle={reviewBooking.serviceTitle}
+            vendorName={reviewBooking.vendorName}
+            onReviewSubmitted={handleReviewSubmitted}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
